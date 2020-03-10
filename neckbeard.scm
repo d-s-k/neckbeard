@@ -249,43 +249,43 @@
     (map cons chord-fingering (iota nstrings)))
   (define (consolidate indexed-fingering nrows)
     (let ((buckets (make-vector/thunk nrows (lambda () (list))))
-	  (skipped-strings (list)))
+          (skipped-strings (list)))
       (for-each (lambda (fingering)
                   (let ((i (car fingering))
-			(string (cdr fingering)))
-		    (if i
-			(vector-set! buckets
+                        (string (cdr fingering)))
+                    (if i
+                        (vector-set! buckets
                                      i
-				     (if string
-					 (cons (cdr fingering)
-					       (vector-ref buckets i))
-					 '()))
-			(set! skipped-strings
-			  (cons string skipped-strings)))))
+                                     (if string
+                                         (cons (cdr fingering)
+                                               (vector-ref buckets i))
+                                         '()))
+                        (set! skipped-strings
+                          (cons string skipped-strings)))))
                 indexed-fingering)
       (values buckets skipped-strings)))
   (define (max* l) (if (null? l) 0 (apply max l)))
   (define (min* l) (if (null? l) 0 (apply min l)))
   (let* ((chord-fingering-fretted-strings
-	  (filter (lambda (x) (and (integer? x) (positive? x)))
-		  chord-fingering))
-	 (highest-fret
-	  (max* chord-fingering-fretted-strings))
+          (filter (lambda (x) (and (integer? x) (positive? x)))
+                  chord-fingering))
+         (highest-fret
+          (max* chord-fingering-fretted-strings))
          (lowest-fret
-	  (min* chord-fingering-fretted-strings))
+          (min* chord-fingering-fretted-strings))
          (empty-frets
-	  (map (lambda (x) (cons x #f))
-	       (iota (+ highest-fret 1)))))
+          (map (lambda (x) (cons x #f))
+               (iota (+ highest-fret 1)))))
     (receive (rows skipped-strings)
-	(consolidate
+        (consolidate
          (sort (lset-union (lambda (a b) (eq? (car a) (car b)))
-			   (index-fingering chord-fingering)
-			   empty-frets)
+                           (index-fingering chord-fingering)
+                           empty-frets)
                (lambda (a b)
-		 (let ((x (car a)) (y (car b)))
-		   (and (integer? x)
-			(integer? y)
-			(< x y)))))
+                 (let ((x (car a)) (y (car b)))
+                   (and (integer? x)
+                        (integer? y)
+                        (< x y)))))
          (+ highest-fret 1))
       (%make-chord-diagram
        nstrings rows skipped-strings lowest-fret highest-fret))))
@@ -301,32 +301,32 @@
 
 (define (left-margin chord-diagram row)
   (let* ((highest-fret (chord-diagram-highest-fret chord-diagram))
-	 (spacing-after-label (if (< highest-fret 10) "  " " ")))
+         (spacing-after-label (if (< highest-fret 10) "  " " ")))
     (if (and (= row highest-fret) (>= row (lowest-fret-label)))
-	(call-with-output-string
-	  (lambda (port)
-	    (write highest-fret port)
-	    (display spacing-after-label port)))
-	"   ")))
+        (call-with-output-string
+          (lambda (port)
+            (write highest-fret port)
+            (display spacing-after-label port)))
+        "   ")))
 
 (define (make-row-string chord-diagram fill-char)
   (let ((nstrings (chord-diagram-nstrings chord-diagram)))
     (make-string (- (+ nstrings (* nstrings (spaces-between-strings)))
-			  1)
-		 fill-char)))
+                          1)
+                 fill-char)))
 
 (define* (fill-columns! string positions char)
   (for-each (lambda (position)
-	      (string-set! string
-			   (* position (+ 1 (spaces-between-strings)))
-			   char))
-	    positions)
+              (string-set! string
+                           (* position (+ 1 (spaces-between-strings)))
+                           char))
+            positions)
   string)
 
 (define (render-top-row chord-diagram)
   (let ((top-row-string (make-row-string chord-diagram #\space))
-	(open-strings (vector-ref (chord-diagram-rows chord-diagram) 0))
-	(skipped-strings (chord-diagram-skipped-strings chord-diagram)))
+        (open-strings (vector-ref (chord-diagram-rows chord-diagram) 0))
+        (skipped-strings (chord-diagram-skipped-strings chord-diagram)))
     (unless (null? open-strings)
       (fill-columns! top-row-string open-strings (open-string-char)))
     (unless (null? skipped-strings)
@@ -335,35 +335,35 @@
 
 (define (render-row chord-diagram n)
   (let ((row-list (vector-ref (chord-diagram-rows chord-diagram) n))
-	(row-string (make-row-string chord-diagram #\space)))
+        (row-string (make-row-string chord-diagram #\space)))
     (fill-columns! row-string
-		   (iota (chord-diagram-nstrings chord-diagram))
-		   (string-char))
+                   (iota (chord-diagram-nstrings chord-diagram))
+                   (string-char))
     (unless (null? row-list)
       (fill-columns! row-string
-		     row-list
-		     (fretted-char)))
+                     row-list
+                     (fretted-char)))
     row-string))
 
 (define (chord-diagram-render-text chord-diagram)
   (let ((horizontal-divider (make-row-string chord-diagram
-					     (horizontal-divider-char)))
-	(lowest-fret (chord-diagram-lowest-fret chord-diagram))
-	(highest-fret (chord-diagram-highest-fret chord-diagram)))
+                                             (horizontal-divider-char)))
+        (lowest-fret (chord-diagram-lowest-fret chord-diagram))
+        (highest-fret (chord-diagram-highest-fret chord-diagram)))
     (call-with-output-string
       (lambda (port)
-	(display (left-margin chord-diagram 0) port)
-	(display (render-top-row chord-diagram) port)
-	(newline port)
-	(display (left-margin chord-diagram 0) port)
-	(display horizontal-divider port)
-	(newline port)
-	(when (> highest-fret 0)
-	  (do ((i lowest-fret (+ i 1)))
-	      ((> i highest-fret))
-	    (display (left-margin chord-diagram i) port)
-	    (display (render-row chord-diagram i) port)
-	    (newline port)))))))
+        (display (left-margin chord-diagram 0) port)
+        (display (render-top-row chord-diagram) port)
+        (newline port)
+        (display (left-margin chord-diagram 0) port)
+        (display horizontal-divider port)
+        (newline port)
+        (when (> highest-fret 0)
+          (do ((i lowest-fret (+ i 1)))
+              ((> i highest-fret))
+            (display (left-margin chord-diagram i) port)
+            (display (render-row chord-diagram i) port)
+            (newline port)))))))
 
 ;; (display (chord-diagram-render-text (make-chord-diagram '(0 7 6 4 4 #f))))
 ;;
