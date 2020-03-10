@@ -213,7 +213,7 @@
          actual-semitones
          diatonic-semitones)))
 
-(define (spell-chord chord)
+(define (chord-spell chord)
   (map (lambda (name alteration)
          (if (null? alteration)
              name
@@ -315,7 +315,7 @@
                           1)
                  fill-char)))
 
-(define* (fill-columns! string positions char)
+(define (fill-columns! string positions char)
   (for-each (lambda (position)
               (string-set! string
                            (* position (+ 1 (spaces-between-strings)))
