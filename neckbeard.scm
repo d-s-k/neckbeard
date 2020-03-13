@@ -298,15 +298,22 @@
 
 (define spaces-between-strings (make-parameter 1))
 (define minimum-frets (make-parameter 4))
-(define lowest-fret-label (make-parameter 4))
+(define label-lowest-fret? (make-parameter #t))
+(define label-highest-fret? (make-parameter #f))
 
-(define (left-margin chord-diagram row)
-  (let* ((highest-fret (chord-diagram-highest-fret chord-diagram))
+(define (left-margin chord-diagram fret)
+  (let* ((lowest-fret (chord-diagram-lowest-fret chord-diagram))
+         (highest-fret (chord-diagram-highest-fret chord-diagram))
          (spacing-after-label (if (< highest-fret 10) "  " " ")))
-    (if (and (= row highest-fret) (>= row (lowest-fret-label)))
+    (if (and (> highest-fret (minimum-frets))
+             (or (and (= fret lowest-fret)
+                      (label-lowest-fret?)
+                      (> lowest-fret 1))
+                 (and (= fret highest-fret)
+                      (label-highest-fret?))))
         (call-with-output-string
           (lambda (port)
-            (write highest-fret port)
+            (write fret port)
             (display spacing-after-label port)))
         "   ")))
 
