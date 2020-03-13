@@ -297,6 +297,7 @@
 (define horizontal-divider-char (make-parameter #\-))
 
 (define spaces-between-strings (make-parameter 1))
+(define minimum-frets (make-parameter 4))
 (define lowest-fret-label (make-parameter 4))
 
 (define (left-margin chord-diagram row)
@@ -345,6 +346,13 @@
                      (fretted-char)))
     row-string))
 
+(define (render-empty-row chord-diagram)
+  (let ((row-string (make-row-string chord-diagram #\space)))
+    (fill-columns! row-string
+                   (iota (chord-diagram-nstrings chord-diagram))
+                   (string-char))
+    row-string))
+
 (define (chord-diagram-render-text chord-diagram)
   (let ((horizontal-divider (make-row-string chord-diagram
                                              (horizontal-divider-char)))
@@ -358,11 +366,16 @@
         (display (left-margin chord-diagram 0) port)
         (display horizontal-divider port)
         (newline port)
-        (when (> highest-fret 0)
-          (do ((i lowest-fret (+ i 1)))
-              ((> i highest-fret))
+        (let ((start (if (<= highest-fret (minimum-frets))
+                         1
+                         lowest-fret))
+              (end (max highest-fret (minimum-frets))))
+          (do ((i start (+ i 1)))
+              ((> i end))
             (display (left-margin chord-diagram i) port)
-            (display (render-row chord-diagram i) port)
+            (if (> i highest-fret)
+                (display (render-empty-row chord-diagram) port)
+                (display (render-row chord-diagram i) port))
             (newline port)))))))
 
 ;; (display (chord-diagram-render-text (make-chord-diagram '(0 7 6 4 4 #f))))
