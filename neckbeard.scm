@@ -295,6 +295,7 @@
 (define open-string-char (make-parameter #\O))
 (define skipped-string-char (make-parameter #\X))
 (define horizontal-divider-char (make-parameter #\-))
+(define nut-char (make-parameter #\=))
 
 (define spaces-between-strings (make-parameter 1))
 (define minimum-frets (make-parameter 4))
@@ -361,10 +362,16 @@
     row-string))
 
 (define (chord-diagram-render-text chord-diagram)
-  (let ((horizontal-divider (make-row-string chord-diagram
-                                             (horizontal-divider-char)))
-        (lowest-fret (chord-diagram-lowest-fret chord-diagram))
-        (highest-fret (chord-diagram-highest-fret chord-diagram)))
+  (let* ((lowest-fret (chord-diagram-lowest-fret chord-diagram))
+         (highest-fret (chord-diagram-highest-fret chord-diagram))
+         (start (if (<= highest-fret (minimum-frets))
+                    1
+                    lowest-fret))
+         (end (max highest-fret (minimum-frets)))
+         (horizontal-divider (make-row-string chord-diagram
+                                              (if (> start 1)
+                                                  (horizontal-divider-char)
+                                                  (nut-char)))))
     (call-with-output-string
       (lambda (port)
         (display (left-margin chord-diagram 0) port)
@@ -373,17 +380,13 @@
         (display (left-margin chord-diagram 0) port)
         (display horizontal-divider port)
         (newline port)
-        (let ((start (if (<= highest-fret (minimum-frets))
-                         1
-                         lowest-fret))
-              (end (max highest-fret (minimum-frets))))
-          (do ((i start (+ i 1)))
-              ((> i end))
-            (display (left-margin chord-diagram i) port)
-            (if (> i highest-fret)
-                (display (render-empty-row chord-diagram) port)
-                (display (render-row chord-diagram i) port))
-            (newline port)))))))
+        (do ((i start (+ i 1)))
+            ((> i end))
+          (display (left-margin chord-diagram i) port)
+          (if (> i highest-fret)
+              (display (render-empty-row chord-diagram) port)
+              (display (render-row chord-diagram i) port))
+          (newline port))))))
 
 ;; (display (chord-diagram-render-text (make-chord-diagram '(0 7 6 4 4 #f))))
 ;;
